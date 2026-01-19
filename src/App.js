@@ -1,45 +1,67 @@
 import "./App.css";
-import { useState } from "react";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-function App() {
-  const queryClient = useQueryClient();
+const API_URL = "https://jsonplaceholder.typicode.com/posts";
+const MODAL_ANIM_MS = 200;
 
+/** --- API helpers --- */
+async function fetchPosts() {
+  const res = await fetch(API_URL);
+  if (!res.ok) throw new Error("Failed to fetch posts");
+  return res.json();
+}
+
+async function createPost({ title, body }) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json; charset=UTF-8" },
+    body: JSON.stringify({ title, body, userId: 1 }),
+  });
+  if (!res.ok) throw new Error("Failed to create post");
+  return res.json();
+}
+
+async function deletePost(postId) {
+  const res = await fetch(`${API_URL}/${postId}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Failed to delete post");
+  return postId;
+}
+
+/** --- tiny modal state helper --- */
+function useModal(animationMs = MODAL_ANIM_MS) {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
-  const [isAnimatingOpen, setIsAnimatingOpen] = useState(false);
-
-
-  const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
-
-  const openModal = () => {
+  const open = () => {
     setIsClosing(false);
     setIsOpen(true);
-    setIsAnimatingOpen(true);
-
-    requestAnimationFrame(() => {
-      setIsAnimatingOpen(false);
-    });
   };
 
-  const closeModal = () => {
+  const close = () => {
     setIsClosing(true);
     setTimeout(() => {
       setIsOpen(false);
       setIsClosing(false);
-    }, 200); 
+    }, animationMs);
   };
 
-  const fetchPosts = async () => {
-    const res = await fetch("https://jsonplaceholder.typicode.com/posts");
-    if (!res.ok) throw new Error("Failed to fetch posts");
-    return res.json();
-  };
+  return { isOpen, isClosing, open, close };
+}
+
+function App() {
+  const queryClient = useQueryClient();
+
+  const modal = useModal();
+  const [form, setForm] = useState({ title: "", body: "" });
+  const [deletingId, setDeletingId] = useState(null);
+
+  const isSubmitDisabled = useMemo(() => {
+    return !form.title.trim() || !form.body.trim();
+  }, [form.title, form.body]);
 
   const {
-    data: posts,
+    data: posts = [],
     isLoading,
     isError,
   } = useQuery({
@@ -47,92 +69,78 @@ function App() {
     queryFn: fetchPosts,
   });
 
-  // delete
-  const deleteMutation = useMutation({
-    mutationFn: async (deletePostId) => {
-      const res = await fetch(
-        `https://jsonplaceholder.typicode.com/posts/${deletePostId}`,
-        { method: "DELETE" },
-      );
-      if (!res.ok) throw new Error("Failed to delete post");
-      return true;
-    },
-    onSuccess: (_, deleteId) => {
-      queryClient.setQueryData(["posts"], (oldPosts) => {
-        if (!oldPosts) return oldPosts;
-        return oldPosts.filter((post) => post.id !== deleteId);
-      });
-    },
-  });
-
-  // post
-  const createPost = async ({ title, body }) => {
-    const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=UTF-8" },
-      body: JSON.stringify({ title, body, userId: 1 }),
-    });
-
-    if (!res.ok) throw new Error("Failed to create post");
-    return res.json();
-  };
-
   const createMutation = useMutation({
     mutationFn: createPost,
     onSuccess: (newPost) => {
-      queryClient.setQueryData(["posts"], (oldPosts) => {
-        if (!oldPosts) return [newPost];
-        return [newPost, ...oldPosts];
-      });
-
-      closeModal();
-      setTitle("");
-      setBody("");
+      queryClient.setQueryData(["posts"], (old = []) => [newPost, ...old]);
+      modal.close();
+      setForm({ title: "", body: "" });
     },
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: deletePost,
+    onMutate: (postId) => {
+      setDeletingId(postId);
+    },
+    onSuccess: (deletedId) => {
+      queryClient.setQueryData(["posts"], (old = []) =>
+        old.filter((p) => p.id !== deletedId),
+      );
+    },
+    onSettled: () => {
+      setDeletingId(null);
+    },
+  });
+
+  const handleSubmit = async () => {
+    // optional: guard for safety
+    if (isSubmitDisabled || createMutation.isPending) return;
+    await createMutation.mutateAsync({ title: form.title, body: form.body });
+  };
 
   if (isLoading) return <h2>Loading...</h2>;
   if (isError) return <h2>Error fetching posts</h2>;
 
   return (
     <div className="main_div posts_app">
-      <button className="createbttn" onClick={openModal}>Create Post</button>
+      <button className="createbttn" onClick={modal.open}>Create Post</button>
 
-      {isOpen && (
+      {modal.isOpen && (
         <div
-          className={`modal_overlay ${isClosing ? "closing" : "open"}`}
-          onClick={closeModal}
+          className={`modal_overlay ${modal.isClosing ? "closing" : "open"}`}
+          onClick={modal.close}
         >
           <div
-            className={`modal ${isClosing ? "closing" : "open"}`}
+            className={`modal ${modal.isClosing ? "closing" : "open"}`}
             onClick={(e) => e.stopPropagation()}
           >
             <h2>Create a post</h2>
 
             <input
               placeholder="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              value={form.title}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, title: e.target.value }))
+              }
             />
 
             <textarea
               placeholder="Body"
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
+              value={form.body}
+              onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
               rows={5}
             />
 
             <div className="modal_actions">
-              <button className="cancel_btn" onClick={closeModal}>
+              <button className="cancel_btn" onClick={modal.close}>
                 Cancel
               </button>
 
               <button
                 className="submit_btn"
-                onClick={() => createMutation.mutate({ title, body })}
-                disabled={
-                  !title.trim() || !body.trim() || createMutation.isPending
-                }
+                onClick={handleSubmit}
+                disabled={isSubmitDisabled || createMutation.isPending}
               >
                 {createMutation.isPending ? "Posting..." : "Post"}
               </button>
@@ -148,25 +156,30 @@ function App() {
       <h1>Posts</h1>
       <p>Browse and manage your posts</p>
 
-      {posts.map((post) => (
-        <div
-          className="card"
-          key={post.id}
-          style={{ border: "1px solid gray", margin: "10px", padding: "10px" }}
-        >
-          <h3>{post.title}</h3>
-          <h2>User {post.userId}</h2>
-          <p className="pbody">{post.body}</p>
+      {posts.map((post) => {
+        const isDeletingThis =
+          deletingId === post.id && deleteMutation.isPending;
 
-          <button
-            className="delbttn"
-            onClick={() => deleteMutation.mutate(post.id)}
-            disabled={deleteMutation.isPending}
+        return (
+          <div
+            className="card"
+            key={post.id}
+            style={{ border: "1px solid gray", margin: 10, padding: 10 }}
           >
-            {deleteMutation.isPending ? "Deleting..." : "Delete Data"}
-          </button>
-        </div>
-      ))}
+            <h3>{post.title}</h3>
+            <h2>User {post.userId}</h2>
+            <p className="pbody">{post.body}</p>
+
+            <button
+              className="delbttn"
+              onClick={() => deleteMutation.mutate(post.id)}
+              disabled={isDeletingThis}
+            >
+              {isDeletingThis ? "Deleting..." : "Delete Data"}
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
