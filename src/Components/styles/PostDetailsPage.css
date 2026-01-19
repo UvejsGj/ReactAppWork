@@ -1,0 +1,78 @@
+.details_page {
+  position: relative;
+  padding-top: 20px;
+}
+
+/* top actions */
+.details_page .back_btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #111827;
+  padding: 0;
+}
+
+.details_page .delete_post_btn {
+  position: absolute;
+  right: 0;
+  top: 16px;
+  background: #e11d48;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.details_page .delete_post_btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* card */
+.details_card {
+  margin-top: 26px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: white;
+  padding: 28px;
+}
+
+.details_title {
+  margin: 0 0 10px 0;
+  font-size: 34px;
+  color: #111827;
+}
+
+.details_meta {
+  margin: 0 0 18px 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.details_body {
+  margin: 0;
+  color: #111827;
+  white-space: pre-line;
+  line-height: 1.6;
+}
+
+.back_btn {
+  background-color: black !important;
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 130px;
+  height: 40px;
+
+  border: none;
+  padding: 0;
+  margin: 0 0 16px 0;
+
+  color: #ffffff !important;
+  cursor: pointer;
+  font-size: 14px;
+  box-shadow: none !important;
+}

@@ -1,0 +1,92 @@
+.card {
+  border: 1px solid #DADBDE;
+  background: #fff;
+  border-radius: 17px;
+  margin: 10px;
+  padding: 10px;
+}
+
+h3 {
+  font-size: 18px;
+  position: relative;
+  left: 20px;
+  color: black;
+}
+
+h1,
+p {
+  position: relative;
+  left: 11px;
+}
+
+p {
+  color: #717182;
+}
+
+h2,
+.pbody {
+  position: relative;
+  left: 11px;
+  color: #717182;
+  font-size: 14px;
+  margin: 10px;
+}
+
+h2 {
+  position: relative;
+  top: -10px;
+  padding-bottom: 30px;
+  font-size: 20px;
+}
+
+/* Delete button */
+.delbttn {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  position: relative;
+  left: 11px;
+}
+
+.delbttn:hover {
+  background-color: darkred;
+}
+
+/* Create Post button (ONLY this button) */
+.posts_app .create_btn {
+  position: relative;
+  top: 90px;
+  left: 670px;
+
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-bottom: 24px;
+
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  z-index: 2;
+}
+
+.posts_app .create_btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.posts_app .create_btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.posts_app .create_btn:focus-visible {
+  outline: 3px solid rgba(99, 102, 241, 0.6);
+  outline-offset: 3px;
+}
