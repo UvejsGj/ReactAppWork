@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { FiTrash2 } from "react-icons/fi";
 import "./styles/PostDetailsPage.css";
 import "../App.css";
 
@@ -11,15 +12,20 @@ function PostDetailsPage() {
   const queryClient = useQueryClient();
 
   const fetchPost = async () => {
-    const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`);
+    const res = await fetch(
+      `https://jsonplaceholder.typicode.com/posts/${postId}`,
+    );
     if (!res.ok) throw new Error("Failed to fetch post");
     return res.json();
   };
 
-  const { data: post, isLoading, isError } = useQuery({
+  const {
+    data: post,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["post", postId],
     queryFn: fetchPost,
-    // ✅ use cache from posts list if available
     initialData: () => {
       const posts = queryClient.getQueryData(["posts"]);
       return posts?.find((p) => p.id === postId);
@@ -28,18 +34,19 @@ function PostDetailsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${postId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${postId}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!res.ok) throw new Error("Failed to delete");
       return true;
     },
     onSuccess: () => {
-      // remove from posts list cache
       queryClient.setQueryData(["posts"], (old) =>
-        old ? old.filter((p) => p.id !== postId) : old
+        old ? old.filter((p) => p.id !== postId) : old,
       );
-      // remove individual post cache
       queryClient.removeQueries({ queryKey: ["post", postId] });
 
       navigate("/");
@@ -60,6 +67,9 @@ function PostDetailsPage() {
         onClick={() => deleteMutation.mutate()}
         disabled={deleteMutation.isPending}
       >
+        <span className="delete_icon">
+          <FiTrash2 />
+        </span>
         {deleteMutation.isPending ? "Deleting..." : "Delete Post"}
       </button>
 

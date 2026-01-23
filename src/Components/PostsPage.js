@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import "../App.css";
-import "./styles/PostsPage.css"; 
+import "./styles/PostsPage.css";
+import { FiPlus } from "react-icons/fi";
 
 function PostsPage() {
   const navigate = useNavigate();
@@ -13,7 +14,11 @@ function PostsPage() {
     return res.json();
   };
 
-  const { data: posts, isLoading, isError } = useQuery({
+  const {
+    data: posts,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ["posts"],
     queryFn: fetchPosts,
     staleTime: 1000 * 60 * 5,
@@ -23,9 +28,12 @@ function PostsPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const res = await fetch(`https://jsonplaceholder.typicode.com/posts/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `https://jsonplaceholder.typicode.com/posts/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (!res.ok) throw new Error("Failed to delete post");
       return id;
     },
@@ -41,9 +49,11 @@ function PostsPage() {
   if (isError) return <h2>Error</h2>;
 
   return (
-    <div className="main_div posts_app">
-      {/* Give this button a class so CSS can target it without breaking other pages */}
+    <div className="main_div posts_app main_page">
       <button className="create_btn" onClick={() => navigate("/new")}>
+        <span className="create_icon">
+          <FiPlus />
+        </span>
         Create Post
       </button>
 
@@ -67,8 +77,6 @@ function PostsPage() {
           <h3>{post.title}</h3>
           <h2>User {post.userId}</h2>
           <p className="pbody">{post.body}</p>
-
-          
         </div>
       ))}
     </div>

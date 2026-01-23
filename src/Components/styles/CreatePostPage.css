@@ -1,9 +1,7 @@
-/* Page wrapper */
 .create_page {
   padding-top: 20px;
 }
 
-/* Back button */
 .create_page .back_btn,
 .details_page .back_btn {
   position: static;
@@ -29,7 +27,6 @@
 
 
 
-/* Main create card */
 .create_page .create_card {
   border: 1px solid #DADBDE;
   border-radius: 17px;
@@ -37,7 +34,6 @@
   padding: 24px;
 }
 
-/* Title + subtitle */
 .create_card h2 {
   color: black;
   margin: 0;
@@ -49,7 +45,6 @@
   margin-bottom: 18px;
 }
 
-/* Labels */
 .create_page .form_label {
   display: block;
   font-weight: 600;
@@ -58,7 +53,6 @@
   margin: 16px 0 6px;
 }
 
-/* Inputs */
 .create_page .form_input,
 .create_page .form_textarea {
   width: 100%;
